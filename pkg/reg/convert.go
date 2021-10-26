@@ -1,7 +1,7 @@
 package reg
 
 // note that some functions were borrowed from
-// borrowed from https://github.com/jamillosantos/functions-for-govaluate
+// https://github.com/jamillosantos/functions-for-govaluate
 
 import (
 	"errors"
@@ -13,6 +13,7 @@ import (
 )
 
 // Unit represents from raw data to the target unit representation.
+// The expression language is documented here: https://github.com/Knetic/govaluate/blob/master/MANUAL.md
 type Unit struct {
 	expression string
 	expr       *govaluate.EvaluableExpression

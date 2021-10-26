@@ -46,7 +46,7 @@ var Registry = []reg.Sensor{
 		Unit:              "dBFS",
 		UnitConversion:    "(20 * log10(abs(v)+1)) / 32767",
 		DatasheetURL:      "http://example.com/datasheet-2.pdf",
-		ExampleValues:     []string{},
-		ExamplesConverted: []string{},
-	}
+		ExampleValues:     []string{"1", "100", "1000", "10000"},
+		ExamplesConverted: []string{"0.0001837397355046121", "0.0012233780167745859", "0.0018313755165131496", "0.0024415072647949844"},
+	},
 }

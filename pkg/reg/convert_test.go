@@ -46,20 +46,9 @@ func TestIdentityConversion(t *testing.T) {
 func TestDBFSConversion(t *testing.T) {
 	con, err := NewConversion("(20 * log10(abs(v)+1)) / 32767", TypeInt16)
 	assert.Nil(t, err)
-	con2, err := NewConversion("(20 * log10(abs(v))) / 32767", TypeInt16)
+
+	res, err := con.ConvertString(int16(10000))
 	assert.Nil(t, err)
 
-	res, err := con.Convert(int16(12345))
-	assert.Nil(t, err)
-
-	res2, err := con2.Convert((int16(12345)))
-	assert.Nil(t, err)
-
-	f1, ok := res.(float64)
-	assert.True(t, ok)
-
-	f2, ok := res2.(float64)
-	assert.True(t, ok)
-
-	log.Printf("dBFS: %.8f %.8f (%.8f)", res, res2, f1-f2)
+	log.Printf("dBFS: %s", res)
 }
