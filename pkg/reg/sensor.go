@@ -1,4 +1,4 @@
-package model
+package reg
 
 import (
 	"errors"
@@ -27,6 +27,9 @@ var (
 	// ErrMaxLengthForNonVariableData means we tried to specify a length for data that is not
 	// of variable length.
 	ErrMaxLengthForNonVariableData = errors.New("max length set for data that is not variable length")
+	// ErrExampleValuesMismatch means that the ExampleValues and ExampleConverted arrays were of different
+	// length, indicating that they are out of sync.
+	ErrExampleValuesMismatch = errors.New("different number of entries in ExampleValues and ExampleConverted")
 )
 
 // Sensor is the structure of a sensor registry entry.
@@ -40,8 +43,12 @@ type Sensor struct {
 	// for information on what symbols are valid.
 	Symbol string `json:"symbol" db:"symbol"`
 
-	// Name is a human readable name for the sensor.  Do not use this for symbol names etc
-	// since this is free-form.
+	// Model is the name of the sensor.  For instance "BME680".  This is not intended for
+	// usage in end-user interfaces, but is more a convenience for technical uses.
+	Model string `json:"model" db:"name"`
+
+	// Name is a human readable name for the sensor meant for use in user interfaces.  Do not
+	// use this for symbol names etc since this is free-form.
 	Name string `json:"name" db:"name"`
 
 	// Free form description of the sensor.
@@ -66,13 +73,24 @@ type Sensor struct {
 	Unit string `json:"unit" db:"unit"`
 
 	// UnitConversion is the arithmetical expression to convert the
-	// raw value from the sensor to the Unit above.
+	// raw value from the sensor to the Unit above.  An empty string means
+	// the raw value from the sensor needs no conversion.
 	UnitConversion string `json:"referenceUnit" db:"reference_unit"`
 
 	// The URL where we can download the datasheet from.  Please make sure that the
 	// URLs used here do not require login if possible (so that we can download and
 	// cache datasheets).
 	DatasheetURL string `json:"datasheetUrl" db:"datasheet_url"`
+
+	// ExampleValues is an array of the string representation of example values.
+	// This is both for documentation and test purposes.  For each example value
+	// there must be a corresponding converted value (by applying the formula in UnitConversion)
+	// in the ExampleConverted array.
+	ExampleValues []string `json:"exampleValues" db:"example_values"`
+
+	// ExamplesConverted represents the conversion of each of the values in ExampleValues
+	// by applying the formula in UnitConversion.
+	ExamplesConverted []string `json:"exampleConverted" db:"example_converted"`
 }
 
 // Validate ensures the Sensor entry is valid
@@ -102,6 +120,10 @@ func (s Sensor) Validate() error {
 		return ErrMaxLengthForNonVariableData
 	}
 
+	if len(s.ExampleValues) != len(s.ExamplesConverted) {
+		return ErrExampleValuesMismatch
+	}
+
 	// if URL is present it must be correct
 	if s.DatasheetURL != "" {
 		_, err := url.Parse(s.DatasheetURL)
@@ -109,6 +131,5 @@ func (s Sensor) Validate() error {
 			return err
 		}
 	}
-
 	return nil
 }

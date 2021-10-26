@@ -1,4 +1,4 @@
-package model
+package reg
 
 // DataType describes the datatype of what a sensor emits.
 type DataType string

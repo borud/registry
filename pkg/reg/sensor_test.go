@@ -1,4 +1,4 @@
-package model
+package reg
 
 import (
 	"testing"
