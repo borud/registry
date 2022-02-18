@@ -1,0 +1,94 @@
+syntax = "proto3";
+package registry.v1;
+
+option go_package = "registry.v1";
+
+import "registry/v1/registry.proto";
+import "google/api/annotations.proto";
+
+
+message GetRegistryRequest{}
+
+message GetRegistryResponse{
+	Registry registry = 1;
+}
+
+message GetDeviceRequest {
+	uint32 id = 1;
+}
+
+message ListDevicesRequest {}
+
+message ListDevicesResponse {
+	repeated Device devices = 1;
+}
+
+message GetSensorRequest {
+	uint32 id = 1;
+}
+
+message ListSensorsRequest {}
+
+message ListSensorsResponse {
+	repeated Sensor sensors = 1;
+}
+
+service RegistryService {
+	rpc GetRegistry(GetRegistryRequest) returns (GetRegistryResponse) {
+		option (google.api.http) = {
+			get: "/api/v1/reg"
+		};
+	};
+
+	rpc AddDevice(Device) returns (Device) {
+		option (google.api.http) = {
+			post: "/api/v1/reg/devices"
+			body: "*"
+		};
+	};
+
+	rpc GetDevice(GetDeviceRequest) returns (Device) {
+		option (google.api.http) = {
+			get: "/api/v1/reg/devices/{id}"
+		};
+	}
+
+	rpc UpdateDevice(Device) returns (Device) {
+		option (google.api.http) = {
+			put: "/api/v1/reg/devicess/{id}"
+			body: "*"
+		};
+	}
+
+	rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse) {
+		option (google.api.http) = {
+			get: "/api/v1/reg/devices"
+		};
+	}
+
+	rpc AddSensor(Sensor) returns (Sensor) {
+		option (google.api.http) = {
+			post: "/api/v1/reg/sensors"
+			body: "*"
+		};
+	};
+
+	rpc GetSensor(GetSensorRequest) returns (Sensor) {
+		option (google.api.http) = {
+			get: "/api/v1/reg/sensors/{id}"
+		};
+	}
+
+	rpc UpdateSensor(Sensor) returns (Sensor) {
+		option (google.api.http) = {
+			put: "/api/v1/reg/sensors/{id}"
+			body: "*"
+		};
+	}
+
+	rpc ListSensors(ListSensorsRequest) returns (ListSensorsResponse) {
+		option (google.api.http) = {
+			get: "/api/v1/reg/sensors"
+		};
+	}
+};

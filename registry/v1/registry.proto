@@ -1,0 +1,189 @@
+syntax = "proto3";
+package registry.v1;
+
+option go_package = "registry.v1";
+
+// The Registry message represents a state dump of the entire registry. The intended
+// use for this message is whenever we dump the entier registry without filtering
+// out anhything.  This is useful for when we need to cache the entire registry.
+//
+// Note that we might not want to serve the entire registry to the world.  
+message Registry {
+	// The registry service should keep track of a version number for
+	// the registry as a whole.  Whenever any part of the registry is updated, this 
+	// version number should be incremented.
+	uint64 version = 1;
+
+	// When this message was generated.
+	int64 generated_at = 2;
+
+	// An array of all the devices 
+	repeated Device devices = 3;
+}
+
+// This message represents a device.  Once a device is defined it cannot be deleted,
+// its ID and SYMBOL should not be re-used. Instead it should be marked as "archived",
+// which means that the device definition should not be used.  For instance if it 
+// was entered into the registry by mistake.
+message Device {
+	// The unique ID of the device.
+	uint32 id = 1;
+
+	// The symbol name for the device is the name we use when generating symbols
+	// during code generastion.  It is important that this follows the strict
+	// rules for symbol names so that it is easy for code generators to create
+	// symbol names that comply with the naming rules in various languages. Symbol
+	// must match the regular expression `^[[:lower:]]+[[:lower:]0-9_]+[[:lower:]0-9]$`
+	string symbol = 2;
+
+	// Display name is the name we use when showing the device name in web interfaces.
+	// TODO(borud): need naming convention.
+	string display_name = 3;
+
+	// Description of the device.  One sentence.
+	string description = 4;
+
+	// Timestamp given in ms since epoch for when the device was added to 
+	// the registry.
+	int64 created = 5;
+
+	// Timestamp given in ms since epoch for when the entry was last updated.
+	int64 updated = 6;
+
+	// When this flag is true the device definition is not in use, but we can't
+	// recycle the ID and SYMBOL because there may be software that refers to
+	// them in the wild.
+	bool archived = 7;
+
+	// A list of the sensors on the device.
+	repeated Sensor sensors = 8;
+
+	// URL to the datasheet for the device.
+	string datasheet_url = 9;
+
+	// This is an array of configuration parameters you can send to this device.
+	// Parameters are specific to each device, so their ID's should start at 1.
+	repeated Parameter parameters = 10;
+}
+
+// A sensor is something that produces an output.
+message Sensor {
+	// The unique ID of the sensor.
+	uint32 id = 1;
+
+	// The symbol name for the sensors is the name we use when generating symbols
+	// during code generastion.  It is important that this follows the strict
+	// rules for symbol names so that it is easy for code generators to create
+	// symbol names that comply with the naming rules in various languages. Symbol
+	// must match the regular expression `^[[:lower:]]+[[:lower:]0-9_]+[[:lower:]0-9]$`
+	string symbol = 2;
+
+	// Display name is the name we use when showing the sensor name in web interfaces.
+	// TODO(borud): need naming convention.
+	string display_name = 3;
+
+	// Description of the sensor.  One sentence.
+	string description = 4;
+
+	// Timestamp given in ms since epoch for when the sensor was added to 
+	// the registry.
+	int64 created = 5;
+
+	// Timestamp given in ms since epoch for when the entry was last updated.
+	int64 updated = 6;
+
+	// When this flag is true the sensor definition is not in use, but we can't
+	// recycle the ID and SYMBOL because there may be software that refers to
+	// them in the wild.
+	bool archived = 7;
+
+	// The raw data type produced by the sensor.  This isn't necessarily useful
+	// outside the firmware, but it may serve as a sensible way to document what
+	// data type a sensor value originates from.  For instance, we may have to
+	// represent an 8 bit integer as a 32 bit integer, and it is useful to know
+	// that a value originated as 8 bit and thus won't have values above 255.
+	DataType raw_data_type = 8;
+
+	// The target data type once we have converted the value.  I am not sure
+	// this is needed, but it is included because its presence clarifies the
+	// semantics of previous field.
+	DataType converted_data_type = 9;
+
+	// The unit of the raw data value from the sensor (eg C * 10 for a temperature
+	// sensor that provides an integer value that is 10 times degrees Celsius).
+	string source_unit = 10;
+
+	// The target unit for the sensors (eg C for temperature). The target unit should
+	// either be an SI unit or something else that makes sense for the sensor.
+	string target_unit = 11;
+	
+	// The URL of the datasheet for this sensor.
+	string datasheet_url = 12;
+
+	// An artithmetical expression to convert the raw value to target_unit.  An empty string
+	// means that the unit needs no conversion to be expressed as the target value. This 
+	// is mostly meant as documentation for programmers who need to do this conversion,
+	// however, in the tooling we make use of an arithmetic package that will
+	// perform conversion of the numbers in example_values and compare the result to
+	// example_values_converted.
+	// The arithmetic package we use in the tooling is https://github.com/Knetic/govaluate.
+	string conversion_expr = 13;
+	repeated string example_values = 14;
+	repeated string example_values_converted = 15;
+}
+
+
+// This message represents parameters you can send to a device. Parameters can
+// be configuration data, commands (eg to activate actuators).
+message Parameter {
+	// Identities are relative to device, which means that the parameters
+	// of each device are assigned IDs typically starting with 1. This allows
+	// parameters to be encoded efficiently on the wire.
+	uint32 id = 1;
+
+	// The symbol name for the parameter is the name we use when generating symbols
+	// during code generastion.  It is important that this follows the strict
+	// rules for symbol names so that it is easy for code generators to create
+	// symbol names that comply with the naming rules in various languages. Symbol
+	// must match the regular expression `^[[:lower:]]+[[:lower:]0-9_]+[[:lower:]0-9]$`
+	string symbol = 2;
+
+	// A description of the parameter that should include sufficient information for
+	// the developer to be able to use the parameter correctly.
+	string description = 3;
+
+	// For variable length types (string and bytes) this represents the maximum
+	// needed length for a parameter.  For fixed size parameters this should be
+	// omitted.
+	uint32 length = 4;
+
+	// It is unfortunate that we do not have 8 and 16 bit ints. But this is
+	// what we think might be a useful minimum set.
+	oneof value {
+		uint32 uint32_val =  5;
+		uint64 uint64_val =  6;
+		int32  int32_val  =  7;
+		int64  int64_val  =  8;
+		bytes  bytes_val  =  9;
+		string string_val = 10;
+	}
+}
+
+// An enumeration that identifies data types.
+enum DataType {
+	UNKNOWN =  0;
+	UINT8   =  1;
+	UINT16  =  2;
+	UINT32  =  3;
+	UINT64  =  4;
+	INT8    =  5;
+	INT16   =  6;
+	INT32   =  7;
+	INT64   =  8;
+	FLOAT32 =  9;
+	FLOAT64 = 10;
+	STRING  = 11;
+	BYTES   = 12;
+    BOOL    = 13;
+}
+
