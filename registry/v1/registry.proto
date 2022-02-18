@@ -55,8 +55,9 @@ message Device {
 	// them in the wild.
 	bool archived = 7;
 
-	// A list of the sensors on the device.
-	repeated Sensor sensors = 8;
+	// A list of the sensors on the device. The key is the sensor ID within this device
+	// and the value is the type of sensor.
+	repeated SensorInstance sensors = 8;
 
 	// URL to the datasheet for the device.
 	string datasheet_url = 9;
@@ -64,6 +65,30 @@ message Device {
 	// This is an array of configuration parameters you can send to this device.
 	// Parameters are specific to each device, so their ID's should start at 1.
 	repeated Parameter parameters = 10;
+}
+
+// A SensorInstance is an instance of a sensor in a device.  This provides us with a
+// numeric identity space for sensors onboard a device that should be representable with 
+// 8 bits.
+message SensorInstance {
+	// Identities are relative to device.
+	uint32 id = 1;
+
+	// The symbol name for the parameter is the name we use when generating symbols
+	// during code generastion.  It is important that this follows the strict
+	// rules for symbol names so that it is easy for code generators to create
+	// symbol names that comply with the naming rules in various languages. Symbol
+	// must match the regular expression `^[[:lower:]]+[[:lower:]0-9_]+[[:lower:]0-9]$`
+	string symbol = 2;
+
+	// Display name is the name we use when showing the sensor instance in web interfaces.
+	// eg "outside temperature" or "relative humidity"
+	// TODO(borud): need naming convention.
+	string display_name = 3;
+
+	// A description of the parameter that should include sufficient information for
+	// the developer to be able to use the parameter correctly.
+	string description = 4;
 }
 
 // A sensor is something that produces an output.
@@ -102,12 +127,12 @@ message Sensor {
 	// data type a sensor value originates from.  For instance, we may have to
 	// represent an 8 bit integer as a 32 bit integer, and it is useful to know
 	// that a value originated as 8 bit and thus won't have values above 255.
-	DataType raw_data_type = 8;
+	Type raw_data_type = 8;
 
 	// The target data type once we have converted the value.  I am not sure
 	// this is needed, but it is included because its presence clarifies the
 	// semantics of previous field.
-	DataType converted_data_type = 9;
+	Type converted_data_type = 9;
 
 	// The unit of the raw data value from the sensor (eg C * 10 for a temperature
 	// sensor that provides an integer value that is 10 times degrees Celsius).
@@ -170,20 +195,20 @@ message Parameter {
 }
 
 // An enumeration that identifies data types.
-enum DataType {
-	UNKNOWN =  0;
-	UINT8   =  1;
-	UINT16  =  2;
-	UINT32  =  3;
-	UINT64  =  4;
-	INT8    =  5;
-	INT16   =  6;
-	INT32   =  7;
-	INT64   =  8;
-	FLOAT32 =  9;
-	FLOAT64 = 10;
-	STRING  = 11;
-	BYTES   = 12;
-    BOOL    = 13;
+enum Type {
+	TYPE_UNSPECIFIED =  0;
+	TYPE_UINT8       =  1;
+	TYPE_UINT16      =  2;
+	TYPE_UINT32      =  3;
+	TYPE_UINT64      =  4;
+	TYPE_INT8        =  5;
+	TYPE_INT16       =  6;
+	TYPE_INT32       =  7;
+	TYPE_INT64       =  8;
+	TYPE_FLOAT32     =  9;
+	TYPE_FLOAT64     = 10;
+	TYPE_STRING      = 11;
+	TYPE_BYTES       = 12;
+    TYPE_BOOL        = 13;
 }
 
